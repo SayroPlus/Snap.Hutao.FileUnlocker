@@ -46,14 +46,14 @@ jobs:
 
     - name: Build Packaging project
       run: |
-        msbuild "src/Snap.Hutao.FileUnlocker.Core/Snap.Hutao.FileUnlocker.Core.csproj" `
+        msbuild "src/Snap.Hutao.FileUnlocker.Packaging/Snap.Hutao.FileUnlocker.Packaging.csproj" `
           -p:Configuration=${{ env.BUILD_CONFIGURATION }} `
           -p:Platform=AnyCPU `
           -p:RestorePackages=false
 
     - name: Create NuGet package
       run: |
-        msbuild "src/Snap.Hutao.FileUnlocker.Core/Snap.Hutao.FileUnlocker.Core.csproj" `
+        msbuild "src/Snap.Hutao.FileUnlocker.Packaging/Snap.Hutao.FileUnlocker.Packaging.csproj" `
           -t:Pack `
           -p:Configuration=${{ env.BUILD_CONFIGURATION }} `
           -p:PackageOutputPath="${{ github.workspace }}/nuget/" `
