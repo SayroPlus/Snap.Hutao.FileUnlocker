@@ -1,0 +1,40 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+		<TargetFramework>netstandard2.0</TargetFramework>
+		<Version>1.0.0</Version>
+		<Authors>SnapHutaoRemasteringProject</Authors>
+		<Description>FileUnlocker x64 libraries for Snap.Hutao.Remastered</Description>
+		<RepositoryType>git</RepositoryType>
+		<PackageTags>fileunlocker;snap;hutao</PackageTags>
+		<RepositoryUrl>https://github.com/SnapHutaoRemasteringProject/Snap.Hutao.FileUnlocker</RepositoryUrl>
+		<SuppressDependenciesWhenPacking>true</SuppressDependenciesWhenPacking>
+		<DevelopmentDependency>true</DevelopmentDependency>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\Snap.Hutao.FileUnlocker.Core\Snap.Hutao.FileUnlocker.Core.vcxproj">
+			<ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+			<SkipGetTargetFrameworkProperties>true</SkipGetTargetFrameworkProperties>
+		</ProjectReference>
+	</ItemGroup>
+
+	<Target Name="CollectNativeOutputs" AfterTargets="Build">
+		<MSBuild Projects="..\Snap.Hutao.FileUnlocker.Core\Snap.Hutao.FileUnlocker.Core.vcxproj" Targets="GetTargetPath" SkipNonexistentTargets="true" ContinueOnError="true">
+			<Output TaskParameter="TargetOutputs" ItemName="NativeTargetOutputs" />
+		</MSBuild>
+		<ItemGroup>
+			<NativeOutputFiles Include="..\Snap.Hutao.FileUnlocker.Core\x64\**\*.dll" />
+			<NativeOutputFiles Include="..\Snap.Hutao.FileUnlocker.Core\obj\x64\**\*.dll" />
+			<NativeOutputFiles Include="..\x64\**\*.dll" />
+		</ItemGroup>
+
+		<Copy SourceFiles="@(NativeOutputFiles)" DestinationFolder="$(OutputPath)\runtimes\win-x64\native\" SkipUnchangedFiles="true" />
+
+		<Message Text="Collected native outputs: @(NativeOutputFiles)" Importance="high" />
+	</Target>
+
+	<ItemGroup>
+		<Content Include="$(OutputPath)\runtimes\win-x64\native\**\*" PackagePath="runtimes\win-x64\native" />
+	</ItemGroup>
+
+</Project>
