@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{bf52025b-a13c-4761-b170-e3461a5301f4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{b35690df-2a23-483a-8dd2-7eb605a2e4ed}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="FileLockManager.h"><Filter>Header Files</Filter></ClInclude>
+    <ClInclude Include="JsonWriter.h"><Filter>Header Files</Filter></ClInclude>
+    <ClInclude Include="MetadataSerializer.h"><Filter>Header Files</Filter></ClInclude>
+    <ClInclude Include="PathUtils.h"><Filter>Header Files</Filter></ClInclude>
+    <ClInclude Include="pch.h"><Filter>Header Files</Filter></ClInclude>
+    <ClInclude Include="SnapHutaoFileUnlockerApi.h"><Filter>Header Files</Filter></ClInclude>
+    <ClInclude Include="ZoneIdentifier.h"><Filter>Header Files</Filter></ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="FileLockManager.cpp"><Filter>Source Files</Filter></ClCompile>
+    <ClCompile Include="FileUnlockerCore.cpp"><Filter>Source Files</Filter></ClCompile>
+    <ClCompile Include="JsonWriter.cpp"><Filter>Source Files</Filter></ClCompile>
+    <ClCompile Include="MetadataSerializer.cpp"><Filter>Source Files</Filter></ClCompile>
+    <ClCompile Include="PathUtils.cpp"><Filter>Source Files</Filter></ClCompile>
+    <ClCompile Include="pch.cpp"><Filter>Source Files</Filter></ClCompile>
+    <ClCompile Include="ZoneIdentifier.cpp"><Filter>Source Files</Filter></ClCompile>
+  </ItemGroup>
+</Project>
