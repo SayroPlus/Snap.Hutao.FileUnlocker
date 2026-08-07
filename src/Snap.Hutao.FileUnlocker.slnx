@@ -8,7 +8,7 @@
   <Folder Name="/.github/workflows/">
     <File Path="../.github/workflows/build.yml" />
   </Folder>
-  <Project Path="Snap.Hutao.FileUnlocker.Core/Snap.Hutao.FileUnlocker.Core.vcxproj" Id="d5910ce5-2e18-4f23-9d38-f826b5e2e2bb" />
+  <Project Path="Snap.Hutao.FileUnlocker/Snap.Hutao.FileUnlocker.vcxproj" Id="d5910ce5-2e18-4f23-9d38-f826b5e2e2bb" />
   <Project Path="Snap.Hutao.FileUnlocker.Packaging/Snap.Hutao.FileUnlocker.Packaging.csproj" Id="61dbc864-15b1-4c02-9f40-daa2e6a6f218" />
-  <Project Path="Snap.Hutao.FileUnlocker/Snap.Hutao.FileUnlocker.vcxproj" Id="7c3ce716-9111-4274-9ef3-d98c65395151" />
+  <Project Path="Snap.Hutao.FileUnlocker.Test/Snap.Hutao.FileUnlocker.Test.vcxproj" Id="7c3ce716-9111-4274-9ef3-d98c65395151" />
 </Solution>

@@ -1,6 +1,6 @@
 #pragma once
 
-#ifdef SNAP_HUTAO_FILE_UNLOCKER_CORE_EXPORTS
+#ifdef SNAP_HUTAO_FILE_UNLOCKER_EXPORTS
 #define SNAP_HUTAO_FILE_UNLOCKER_API __declspec(dllexport)
 #else
 #define SNAP_HUTAO_FILE_UNLOCKER_API __declspec(dllimport)

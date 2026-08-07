@@ -9,15 +9,11 @@
 #endif
 
 #include <Windows.h>
-#include <objbase.h>
-#include <Psapi.h>
-#include <TlHelp32.h>
+#include <shellapi.h>
 
-#include <algorithm>
-#include <cwctype>
 #include <filesystem>
-#include <map>
-#include <memory>
+#include <iostream>
+#include <optional>
 #include <sstream>
 #include <stdexcept>
 #include <string>

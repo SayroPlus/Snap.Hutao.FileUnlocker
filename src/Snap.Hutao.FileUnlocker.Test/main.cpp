@@ -1,6 +1,6 @@
 #include "pch.h"
 #include "CommandLine.h"
-#include "../Snap.Hutao.FileUnlocker.Core/SnapHutaoFileUnlockerApi.h"
+#include "../Snap.Hutao.FileUnlocker/SnapHutaoFileUnlockerApi.h"
 
 namespace Snap::Hutao::FileUnlocker::Cli
 {

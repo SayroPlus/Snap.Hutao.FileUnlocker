@@ -40,7 +40,7 @@ jobs:
 
     - name: Build C++ Native project
       run: |
-        msbuild "src/Snap.Hutao.FileUnlocker.Core/Snap.Hutao.FileUnlocker.Core.vcxproj" `
+        msbuild "src/Snap.Hutao.FileUnlocker/Snap.Hutao.FileUnlocker.vcxproj" `
           -p:Configuration=${{ env.BUILD_CONFIGURATION }} `
           -p:Platform=${{ env.BUILD_PLATFORM }} `
 
@@ -74,6 +74,6 @@ jobs:
       uses: actions/upload-artifact@v7
       with:
         name: native-dlls
-        path: src/Snap.Hutao.FileUnlocker.Core/x64/${{ env.BUILD_CONFIGURATION }}/*.dll
+        path: src/Snap.Hutao.FileUnlocker/x64/${{ env.BUILD_CONFIGURATION }}/*.dll
         retention-days: 30
         if-no-files-found: error
