@@ -1,79 +1,114 @@
-﻿name: Build
+name: Build FileUnlocker x64
 
 on:
+  workflow_dispatch:
   push:
-    branches: [ main ]
-  pull_request:
-    branches: [ main ]
-  workflow_dispatch: 
+    branches:
+      - main
 
-env:
-  DOTNET_VERSION: '10.0.x'
-  MSBUILD_VERSION: '18.0'
-  SOLUTION_PATH: 'src/Snap.Hutao.FileUnlocker.slnx'
-  BUILD_CONFIGURATION: 'Release'
-  BUILD_PLATFORM: 'x64'
+permissions:
+  contents: read
 
 jobs:
-  build:
-    runs-on: windows-2025-vs2026
-    
+  build-x64:
+    runs-on: windows-2025
+
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v6
-      with:
-        fetch-depth: 0
+      - name: Checkout
+        uses: actions/checkout@v4
 
-    - name: Setup .NET
-      uses: actions/setup-dotnet@v5
-      with:
-        dotnet-version: ${{ env.DOTNET_VERSION }}
+      - name: Setup MSBuild
+        uses: microsoft/setup-msbuild@v2
 
-    - name: Setup MSBuild
-      uses: microsoft/setup-msbuild@v2
-      with:
-        msbuild-version: ${{ env.MSBUILD_VERSION }}
+      - name: Build Release x64
+        shell: pwsh
+        run: |
+          msbuild "src\Snap.Hutao.FileUnlocker.sln" `
+            /m `
+            /p:Configuration=Release `
+            /p:Platform=x64 `
+            /p:PlatformToolset=v143 `
+            /p:WindowsTargetPlatformVersion=10.0
 
-    - name: Restore NuGet packages
-      run: |
-        dotnet restore "${{ env.SOLUTION_PATH }}"
+      - name: Find build output
+        shell: pwsh
+        run: |
+          Write-Host "Searching for EXE and DLL files..."
 
-    - name: Build C++ Native project
-      run: |
-        msbuild "src/Snap.Hutao.FileUnlocker/Snap.Hutao.FileUnlocker.vcxproj" `
-          -p:Configuration=${{ env.BUILD_CONFIGURATION }} `
-          -p:Platform=${{ env.BUILD_PLATFORM }} `
+          Get-ChildItem -Path . -Recurse -File `
+            -Include "Snap.Hutao.FileUnlocker.exe","Snap.Hutao.FileUnlocker.Core.dll" |
+            Select-Object FullName
 
-    - name: Build Packaging project
-      run: |
-        msbuild "src/Snap.Hutao.FileUnlocker.Packaging/Snap.Hutao.FileUnlocker.Packaging.csproj" `
-          -p:Configuration=${{ env.BUILD_CONFIGURATION }} `
-          -p:Platform=AnyCPU `
-          -p:RestorePackages=false
+      - name: Prepare portable package
+        shell: pwsh
+        run: |
+          $out = "release\Snap.Hutao.FileUnlocker-x64"
 
-    - name: Create NuGet package
-      run: |
-        msbuild "src/Snap.Hutao.FileUnlocker.Packaging/Snap.Hutao.FileUnlocker.Packaging.csproj" `
-          -t:Pack `
-          -p:Configuration=${{ env.BUILD_CONFIGURATION }} `
-          -p:PackageOutputPath="${{ github.workspace }}/nuget/" `
-          -p:RestorePackages=false `
-          -p:IncludeSymbols=false `
-          -p:IncludeSource=false `
-          -p:NoBuild=false
+          New-Item -ItemType Directory -Force -Path $out | Out-Null
 
-    - name: Upload NuGet artifact
-      uses: actions/upload-artifact@v7
-      with:
-        name: nuget-package
-        path: ${{ github.workspace }}/nuget/*.nupkg
-        retention-days: 30
-        if-no-files-found: error
+          $exe = Get-ChildItem -Path . -Recurse -File `
+            -Filter "Snap.Hutao.FileUnlocker.exe" |
+            Where-Object { $_.FullName -match "\\x64\\Release\\" } |
+            Select-Object -First 1
 
-    - name: Upload Native DLLs artifact
-      uses: actions/upload-artifact@v7
-      with:
-        name: native-dlls
-        path: src/Snap.Hutao.FileUnlocker/x64/${{ env.BUILD_CONFIGURATION }}/*.dll
-        retention-days: 30
-        if-no-files-found: error
+          if (-not $exe) {
+            Write-Error "Snap.Hutao.FileUnlocker.exe was not found."
+            exit 1
+          }
+
+          Write-Host "EXE found:"
+          Write-Host $exe.FullName
+
+          Copy-Item $exe.FullName "$out\Snap.Hutao.FileUnlocker.exe" -Force
+
+          $exeDir = $exe.Directory.FullName
+
+          Get-ChildItem -Path $exeDir -File -Filter "*.dll" |
+            Copy-Item -Destination $out -Force
+
+          if (-not (Test-Path "$out\Snap.Hutao.FileUnlocker.Core.dll")) {
+            $core = Get-ChildItem -Path . -Recurse -File `
+              -Filter "Snap.Hutao.FileUnlocker.Core.dll" |
+              Select-Object -First 1
+
+            if ($core) {
+              Copy-Item $core.FullName "$out\Snap.Hutao.FileUnlocker.Core.dll" -Force
+            }
+          }
+
+          @"
+          Snap.Hutao.FileUnlocker x64
+
+          Usage:
+
+          query:
+          Snap.Hutao.FileUnlocker.exe query "C:\path\file.exe"
+
+          query locks:
+          Snap.Hutao.FileUnlocker.exe query-locks "C:\path\file.exe"
+
+          unlock:
+          Snap.Hutao.FileUnlocker.exe unlock-locks "C:\path\file.exe"
+
+          Run CMD or PowerShell as Administrator for maximum process/handle coverage.
+          "@ | Set-Content "$out\README.txt" -Encoding UTF8
+
+          Write-Host ""
+          Write-Host "FINAL PACKAGE:"
+          Get-ChildItem $out
+
+      - name: Create ZIP
+        shell: pwsh
+        run: |
+          Compress-Archive `
+            -Path "release\Snap.Hutao.FileUnlocker-x64\*" `
+            -DestinationPath "release\Snap.Hutao.FileUnlocker-x64.zip" `
+            -Force
+
+      - name: Upload EXE package
+        uses: actions/upload-artifact@v4
+        with:
+          name: Snap.Hutao.FileUnlocker-x64
+          path: release/Snap.Hutao.FileUnlocker-x64.zip
+          retention-days: 30
+          if-no-files-found: error
