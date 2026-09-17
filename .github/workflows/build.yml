@@ -10,7 +10,7 @@ permissions:
   contents: read
 
 jobs:
-  build-x64:
+  build:
     runs-on: windows-2025
 
     steps:
@@ -20,95 +20,113 @@ jobs:
       - name: Setup MSBuild
         uses: microsoft/setup-msbuild@v2
 
-      - name: Build Release x64
+      - name: Build
         shell: pwsh
         run: |
+          Write-Host "=== Building solution ==="
+
           msbuild "src\Snap.Hutao.FileUnlocker.sln" `
             /m `
             /p:Configuration=Release `
             /p:Platform=x64 `
-            /p:PlatformToolset=v143 `
-            /p:WindowsTargetPlatformVersion=10.0
+            /verbosity:minimal
 
-      - name: Find build output
+      - name: Locate outputs
         shell: pwsh
         run: |
-          Write-Host "Searching for EXE and DLL files..."
+          Write-Host ""
+          Write-Host "=== ALL EXE FILES ==="
 
-          Get-ChildItem -Path . -Recurse -File `
-            -Include "Snap.Hutao.FileUnlocker.exe","Snap.Hutao.FileUnlocker.Core.dll" |
-            Select-Object FullName
+          $exes = Get-ChildItem -Path $env:GITHUB_WORKSPACE `
+            -Recurse `
+            -File `
+            -Filter "*.exe" `
+            -ErrorAction SilentlyContinue
 
-      - name: Prepare portable package
-        shell: pwsh
-        run: |
-          $out = "release\Snap.Hutao.FileUnlocker-x64"
-
-          New-Item -ItemType Directory -Force -Path $out | Out-Null
-
-          $exe = Get-ChildItem -Path . -Recurse -File `
-            -Filter "Snap.Hutao.FileUnlocker.exe" |
-            Where-Object { $_.FullName -match "\\x64\\Release\\" } |
-            Select-Object -First 1
-
-          if (-not $exe) {
-            Write-Error "Snap.Hutao.FileUnlocker.exe was not found."
+          if ($exes.Count -eq 0) {
+            Write-Error "NO EXE FILE WAS GENERATED."
             exit 1
           }
 
-          Write-Host "EXE found:"
-          Write-Host $exe.FullName
-
-          Copy-Item $exe.FullName "$out\Snap.Hutao.FileUnlocker.exe" -Force
-
-          $exeDir = $exe.Directory.FullName
-
-          Get-ChildItem -Path $exeDir -File -Filter "*.dll" |
-            Copy-Item -Destination $out -Force
-
-          if (-not (Test-Path "$out\Snap.Hutao.FileUnlocker.Core.dll")) {
-            $core = Get-ChildItem -Path . -Recurse -File `
-              -Filter "Snap.Hutao.FileUnlocker.Core.dll" |
-              Select-Object -First 1
-
-            if ($core) {
-              Copy-Item $core.FullName "$out\Snap.Hutao.FileUnlocker.Core.dll" -Force
-            }
+          foreach ($file in $exes) {
+            Write-Host $file.FullName
           }
 
-          @"
-          Snap.Hutao.FileUnlocker x64
+          Write-Host ""
+          Write-Host "=== ALL DLL FILES ==="
 
-          Usage:
+          Get-ChildItem -Path $env:GITHUB_WORKSPACE `
+            -Recurse `
+            -File `
+            -Filter "*.dll" `
+            -ErrorAction SilentlyContinue |
+            ForEach-Object {
+              Write-Host $_.FullName
+            }
 
-          query:
-          Snap.Hutao.FileUnlocker.exe query "C:\path\file.exe"
+      - name: Find FileUnlocker executable
+        shell: pwsh
+        run: |
+          $exe = Get-ChildItem `
+            -Path $env:GITHUB_WORKSPACE `
+            -Recurse `
+            -File `
+            -Filter "Snap.Hutao.FileUnlocker.exe" `
+            -ErrorAction SilentlyContinue |
+            Select-Object -First 1
 
-          query locks:
-          Snap.Hutao.FileUnlocker.exe query-locks "C:\path\file.exe"
+          if (-not $exe) {
+            Write-Host ""
+            Write-Host "=== POSSIBLE EXECUTABLES ==="
 
-          unlock:
-          Snap.Hutao.FileUnlocker.exe unlock-locks "C:\path\file.exe"
+            Get-ChildItem -Path $env:GITHUB_WORKSPACE `
+              -Recurse `
+              -File `
+              -Filter "*.exe" |
+              Select-Object FullName
 
-          Run CMD or PowerShell as Administrator for maximum process/handle coverage.
-          "@ | Set-Content "$out\README.txt" -Encoding UTF8
+            Write-Error "Snap.Hutao.FileUnlocker.exe was not generated."
+            exit 1
+          }
+
+          Write-Host "FOUND:"
+          Write-Host $exe.FullName
+
+          "EXE_PATH=$($exe.FullName)" >> $env:GITHUB_ENV
+
+      - name: Package
+        shell: pwsh
+        run: |
+          $out = "$env:GITHUB_WORKSPACE\release"
+
+          New-Item -ItemType Directory -Force -Path $out | Out-Null
+
+          $exe = Get-Item $env:EXE_PATH
+          $source = $exe.Directory.FullName
+
+          Copy-Item $exe.FullName `
+            "$out\Snap.Hutao.FileUnlocker.exe" `
+            -Force
+
+          Get-ChildItem $source -File -Filter "*.dll" |
+            Copy-Item -Destination $out -Force
 
           Write-Host ""
-          Write-Host "FINAL PACKAGE:"
+          Write-Host "=== PACKAGE ==="
           Get-ChildItem $out
 
       - name: Create ZIP
         shell: pwsh
         run: |
           Compress-Archive `
-            -Path "release\Snap.Hutao.FileUnlocker-x64\*" `
-            -DestinationPath "release\Snap.Hutao.FileUnlocker-x64.zip" `
+            -Path "$env:GITHUB_WORKSPACE\release\*" `
+            -DestinationPath "$env:GITHUB_WORKSPACE\Snap.Hutao.FileUnlocker-x64.zip" `
             -Force
 
-      - name: Upload EXE package
+      - name: Upload
         uses: actions/upload-artifact@v4
         with:
           name: Snap.Hutao.FileUnlocker-x64
-          path: release/Snap.Hutao.FileUnlocker-x64.zip
+          path: Snap.Hutao.FileUnlocker-x64.zip
           retention-days: 30
           if-no-files-found: error
